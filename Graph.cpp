@@ -3,10 +3,11 @@
 #include <list>
 #include <queue>
 #include <stack>
+#include <vector>
 #include <limits.h>
 using namespace std;
 //#define V 4 				// FloyedWarshall
-#define V 9				// Dijkstra and Prim
+#define V 9					// Dijkstra and Prim
 #define INF INT_MAX
 #define MINF INT_MIN
 
@@ -18,6 +19,56 @@ void printStack(stack<int> s) {
     cout << endl;
     cout << endl;
 }
+
+typedef struct edge {
+	int src;
+	int dest;
+	int weight;
+	edge (int s, int d, int w) {
+		src = s;
+		dest = d;
+		weight = w;
+	}
+}edge;
+
+class EdgeGraph {
+	public:
+		int v;
+		int e;
+		vector<edge> edgeVector;
+		EdgeGraph(int v, int e) {
+			this->v = v;
+			this->e = e;
+		}
+};
+
+class DirectedEdgeGraph : public EdgeGraph {
+	public:
+		DirectedEdgeGraph(int v, int e) : EdgeGraph(v, e) {
+		}
+		void addEdge(int, int, int);
+};
+
+class UndirectedEdgeGraph : public EdgeGraph {
+	public:
+		UndirectedEdgeGraph(int v, int e) : EdgeGraph(v, e) {
+		}
+		void addEdge(int, int, int);
+};
+
+void DirectedEdgeGraph::addEdge(int source, int dest, int weight) {
+	edge newEdge(source, dest, weight);
+	this->edgeVector.push_back(newEdge);
+}
+
+void UndirectedEdgeGraph::addEdge(int source, int dest, int weight) {
+	edge newEdge1(source, dest, weight);
+	edge newEdge2(dest, source, weight);
+	this->edgeVector.push_back(newEdge1);
+	this->edgeVector.push_back(newEdge2);
+}
+
+
 
 typedef struct node {
 	int dest;
@@ -563,6 +614,92 @@ void primMST(int GraphMatrix[][V]) {
 	printMST(parent, key);
 }
 
+void bellmanFordMatrixRep(int GraphMatrix[][V], int source) {
+
+	int minDist[V];
+    int storePredecessor[V];
+    int minDistVertex;
+    int i;
+    int j;
+    int k;
+
+    for(i=0; i < V; i++) {
+    	minDist[i] = INF;    		
+	 	storePredecessor[i] = -1;
+    }
+	minDist[source] = 0;
+
+//	minDist already holds the minimum distance for the vertex furthest from our source
+//	Hence, we can run the loop v-1 times
+    for(i=0; i < V-1; i++) {
+	    for(j=0; j < V; j++) {
+		    for(k=0; k < V; k++) {
+		    	if( GraphMatrix[j][k] != INF &&
+		    		minDist[j] != INF &&
+		    		minDist[k] > minDist[j] + GraphMatrix[j][k]) {
+
+		    		minDist[k] = minDist[j] + GraphMatrix[j][k];
+				 	storePredecessor[k] = j;
+		    	}
+		    }
+    	}
+	}
+	printList(minDist, V);
+	printPathList(storePredecessor, 0, 8);
+}
+
+void bellmanFordEdgeRep(EdgeGraph* edgeGraph, int source) {
+
+	int v = edgeGraph->v;
+	int e = edgeGraph->e;
+	vector<edge> edgeVector = edgeGraph->edgeVector;
+	int src;
+	int dest;
+	int weight;
+
+	int minDist[v];
+	int storePredecessor[v];
+
+	for(int i = 0; i < v; i++) {
+		minDist[i] = INF;
+	}
+	minDist[source] = 0;
+	storePredecessor[source] = -1;
+
+	for(int i=0; i < v-1; i++) {
+		for(int j=0; j < e; j++) {
+			src = edgeVector[j].src;
+			dest = edgeVector[j].dest;
+			weight = edgeVector[j].weight;
+
+			if(	minDist[src] != INF &&
+				minDist[dest] > minDist[src] + weight) {
+				minDist[dest] = minDist[src] + weight;
+				storePredecessor[dest] = src;
+			}
+		}
+	}
+
+	for(int j=0; j < e; j++) {
+		src = edgeVector[j].src;
+		dest = edgeVector[j].dest;
+		weight = edgeVector[j].weight;
+
+		if(	minDist[src] != INF &&
+			minDist[dest] > minDist[src] + weight) {
+			printf("Negative Weight Cycle Found!\n");
+		}
+	}
+
+	printList(minDist, v);
+	printPathList(storePredecessor, 0, 3);
+}
+
+void kruskalMST(EdgeGraph edgeGraph) {
+
+	
+}
+
 int main() {
 
 	// Directed Cyclic Graph
@@ -625,7 +762,6 @@ int main() {
 	printMatrix(GraphMatrix);
 	floydWarshell(GraphMatrix);
 
-*/
 	int GraphMatrix[V][V] = { {  0,   4, INF, INF, INF, INF, INF,   8, INF},
                       		  {  4,   0,   8, INF, INF, INF, INF,  11, INF},
                       		  {INF,   8,   0,   7, INF,   4, INF, INF,   2},
@@ -639,8 +775,37 @@ int main() {
 
 	printMatrix(GraphMatrix);
 	dijkstra(GraphMatrix, 0);
-
-	printMatrix(GraphMatrix);
 	primMST(GraphMatrix);
+	bellmanFordMatrixRep(GraphMatrix, 0);
+*/
+
+	UndirectedEdgeGraph UEG(9, 28);
+	UEG.addEdge(0, 1,  4);
+	UEG.addEdge(0, 7,  8);
+	UEG.addEdge(1, 7, 11);
+	UEG.addEdge(1, 2,  8);
+	UEG.addEdge(7, 8,  7);
+	UEG.addEdge(7, 6,  1);
+	UEG.addEdge(2, 8,  2);
+	UEG.addEdge(8, 6,  6);
+	UEG.addEdge(2, 3,  7);
+	UEG.addEdge(2, 5,  4);
+	UEG.addEdge(6, 5,  2);
+	UEG.addEdge(3, 5, 14);
+	UEG.addEdge(3, 4,  9);
+	UEG.addEdge(5, 4, 10);
+
+	DirectedEdgeGraph DEG(5, 8);
+	DEG.addEdge(0, 1,  -1);
+	DEG.addEdge(0, 2,   4);
+	DEG.addEdge(1, 2,   3);
+	DEG.addEdge(3, 2,   5);
+	DEG.addEdge(3, 1,   1);	
+	DEG.addEdge(1, 3,   2);
+	DEG.addEdge(1, 4,   2);
+	DEG.addEdge(4, 3,  -3);
+
+	bellmanFordEdgeRep(&UEG, 0);
+	bellmanFordEdgeRep(&DEG, 0);
     return 0;
 }

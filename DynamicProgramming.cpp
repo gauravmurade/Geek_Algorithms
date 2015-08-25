@@ -98,6 +98,22 @@ void maxSubarraySum(int arr[], int arrLength) {
 	cout << max << "   " << maxStart << "   " << maxStop << endl;	
 }
 
+int waysToReachNthStair(int n, int k) {
+				
+	int storeResult[n+1];
+	storeResult[0] = 1;
+	storeResult[1] = 1;
+
+	for(int i = 2; i <= n; i++) {
+		storeResult[i] = 0;
+		for(int j = 1; j <= i && j <= k; j++) {
+			storeResult[i] += storeResult[i-j];
+//			printf("%d	%d\n", i, storeResult[i]);
+		}
+	}
+	return storeResult[n];
+}
+
 int main() {
 /*
 	for(int i=0; i<10; i++) {
@@ -152,5 +168,6 @@ int main() {
 	int arr[] = {-2, -3, 4, -1, -2, 1, 5, -3};
 	int arrLength = sizeof(arr)/sizeof(arr[0]);
 	maxSubarraySum(arr, arrLength);	
+	printf("%d\n", waysToReachNthStair(4, 3));
 	return 0;
 }
